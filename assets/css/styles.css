@@ -394,6 +394,877 @@ header.scrolled {
   }
 }
 
+/* --------------------------------------------------------------------------
+   Black Friday Hero
+   Hidden by default. An inline script in index.html adds .bf-live to <html>
+   during the event window, which swaps it in for the default hero before
+   first paint (no flash, no layout shift).
+   -------------------------------------------------------------------------- */
+.bf-hero {
+  --bf-bg: #0b0b0e;
+  --bf-gold: #FFD43B;
+  --bf-gold-soft: #FFE58A;
+  --bf-line: rgba(255, 255, 255, 0.12);
+  --bf-text-dim: rgba(255, 255, 255, 0.74);
+
+  display: none;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(56rem 38rem at 88% 8%, rgba(235, 27, 33, 0.42), transparent 62%),
+    radial-gradient(40rem 28rem at -5% 105%, rgba(235, 27, 33, 0.2), transparent 60%),
+    var(--bf-bg);
+}
+
+.bf-live .bf-hero { display: block; }
+.bf-live .default-hero { display: none; }
+
+/* Gold confetti speckle, faded toward the copy for legibility. */
+.bf-hero-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle at 20% 30%, var(--bf-gold) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 70% 80%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 45% 60%, var(--bf-gold) 0 1px, transparent 2px);
+  background-size: 140px 140px, 190px 190px, 90px 90px;
+  -webkit-mask-image: linear-gradient(105deg, transparent 20%, #000 75%);
+          mask-image: linear-gradient(105deg, transparent 20%, #000 75%);
+}
+
+/* Brand stripe along the bottom edge. */
+.bf-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--c-brand) 0%, var(--c-brand) 55%, var(--bf-gold) 55%, var(--bf-gold) 72%, var(--c-brand) 72%);
+}
+
+.bf-hero-inner {
+  display: grid;
+  grid-template-areas: "copy" "flyer" "schedule";
+  gap: 2.5rem;
+  padding-top: 3rem;
+  padding-bottom: 3.25rem;
+}
+
+/* Copy ------------------------------------------------------------------- */
+.bf-hero-copy {
+  grid-area: copy;
+  min-width: 0;
+  text-align: center;
+}
+
+.bf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bf-eyebrow-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--bf-gold);
+  box-shadow: 0 0 0 0 rgba(255, 212, 59, 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bf-eyebrow-dot { animation: bf-ping 2s ease-out infinite; }
+}
+
+@keyframes bf-ping {
+  0% { box-shadow: 0 0 0 0 rgba(255, 212, 59, 0.55); }
+  80%, 100% { box-shadow: 0 0 0 0.6rem rgba(255, 212, 59, 0); }
+}
+
+.bf-title {
+  margin: 1.25rem 0 0;
+  font-size: clamp(3.1rem, 14vw, 5.25rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.bf-title-line {
+  display: block;
+}
+
+.bf-title-accent {
+  position: relative;
+  display: inline-block;
+  margin-top: 0.12em;
+  padding: 0.04em 0.28em 0.08em;
+  color: var(--bf-gold);
+  isolation: isolate;
+}
+
+/* Slanted red plate behind "Sale", echoing the flyer artwork. */
+.bf-title-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--c-brand), var(--c-brand-dark));
+  box-shadow: 0 14px 36px rgba(235, 27, 33, 0.4);
+  transform: skewX(-10deg);
+}
+
+.bf-status {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.6rem 1rem;
+  border-left: 3px solid var(--bf-gold);
+  border-radius: 0 8px 8px 0;
+  background: rgba(255, 212, 59, 0.1);
+  color: var(--bf-gold-soft);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.bf-status strong {
+  color: #fff;
+}
+
+.bf-lead {
+  max-width: 36rem;
+  margin: 1.1rem auto 0;
+  color: var(--bf-text-dim);
+  font-size: clamp(1rem, 2.4vw, 1.15rem);
+  line-height: 1.7;
+}
+
+.bf-lead strong {
+  color: #fff;
+}
+
+.bf-perks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  max-width: 34rem;
+  margin: 1.75rem auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-perks li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.9rem 0.6rem;
+  border: 1px solid var(--bf-line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bf-perk-value {
+  color: var(--bf-gold);
+  font-size: clamp(1.35rem, 5.5vw, 1.85rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.bf-perk-label {
+  color: var(--bf-text-dim);
+  font-size: clamp(0.66rem, 2vw, 0.76rem);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bf-actions {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 28rem;
+  margin: 2rem auto 0;
+}
+
+.bf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.35rem;
+  padding: 0.9rem 1.75rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bf-btn svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bf-btn-primary {
+  border: 2px solid var(--c-brand);
+  background: var(--c-brand);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(235, 27, 33, 0.38);
+}
+
+.bf-btn-primary:hover {
+  border-color: var(--c-brand-dark);
+  background: var(--c-brand-dark);
+  transform: translateY(-2px);
+}
+
+.bf-btn-ghost {
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: #fff;
+}
+
+.bf-btn-ghost:hover {
+  border-color: #fff;
+  background: #fff;
+  color: var(--bf-bg);
+  transform: translateY(-2px);
+}
+
+.bf-hero :focus-visible {
+  outline: 3px solid var(--bf-gold);
+  outline-offset: 3px;
+}
+
+/* Hours: two self-contained chips that wrap as whole units, never mid-phrase. */
+.bf-hours {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-hours li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--bf-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--bf-text-dim);
+  font-size: 0.86rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.bf-hours strong {
+  color: #fff;
+}
+
+.bf-hours svg {
+  flex-shrink: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: none;
+  stroke: var(--bf-gold);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Fractions: Inter's web subset has no "⅓" glyph, so the browser substitutes
+   a mismatched fallback. Build it from Inter digits instead. The hidden
+   zero-width gap keeps the text readable as "33 1/3%". */
+.frac {
+  display: inline-block;
+  margin: 0 0.04em 0 0.06em;
+  font-size: 0.6em;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: 0.42em;
+}
+
+.frac-gap {
+  font-size: 0;
+}
+
+.frac-n,
+.frac-d {
+  display: inline-block;
+}
+
+.frac-s {
+  display: inline-block;
+  margin: 0 0.02em;
+  transform: translateY(0.2em) skewX(-6deg);
+  opacity: 0.9;
+}
+
+.frac-d {
+  transform: translateY(0.55em);
+}
+
+/* Countdown -------------------------------------------------------------- */
+.bf-countdown {
+  margin-top: 1.6rem;
+}
+
+.bf-countdown[hidden] {
+  display: none;
+}
+
+.bf-countdown-label {
+  color: var(--bf-text-dim);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bf-countdown-units {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.bf-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 4.1rem;
+  padding: 0.65rem 0.4rem 0.55rem;
+  border: 1px solid var(--bf-line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bf-unit[hidden] {
+  display: none;
+}
+
+.bf-unit-num {
+  color: #fff;
+  font-size: clamp(1.6rem, 7vw, 2rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.bf-unit:first-child .bf-unit-num {
+  color: var(--bf-gold);
+}
+
+.bf-unit-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 359px) {
+  .bf-countdown-units { gap: 0.35rem; }
+  .bf-unit { min-width: 0; flex: 1; }
+}
+
+/* Flyer ------------------------------------------------------------------ */
+.bf-flyer {
+  grid-area: flyer;
+  position: relative;
+  justify-self: center;
+  width: min(100%, 21rem);
+  margin: 0;
+  isolation: isolate;
+}
+
+.bf-flyer::before {
+  content: "";
+  position: absolute;
+  inset: 8% -10%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(235, 27, 33, 0.55), transparent);
+  filter: blur(30px);
+}
+
+.bf-flyer-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0.55rem;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  cursor: zoom-in;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 30px 70px rgba(0, 0, 0, 0.55);
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.35s ease;
+}
+
+.bf-flyer-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.bf-flyer-zoom {
+  position: absolute;
+  left: 50%;
+  bottom: -1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--c-brand);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+}
+
+.bf-flyer-zoom svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+/* Schedule --------------------------------------------------------------- */
+.bf-schedule {
+  grid-area: schedule;
+  min-width: 0;
+  padding-top: 2.25rem;
+  border-top: 1px solid var(--bf-line);
+}
+
+.bf-schedule-head {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.bf-schedule-head h2 {
+  color: #fff;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.bf-schedule-head p {
+  margin-top: 0.4rem;
+  color: var(--bf-text-dim);
+  font-size: 0.95rem;
+}
+
+/* Mobile/tablet: swipeable row. Wide desktop: all seven days in one row. */
+.bf-days {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(14.5rem, 78%);
+  gap: 0.85rem;
+  margin: 0 -1rem;
+  padding: 0.85rem 1rem 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  list-style: none;
+}
+
+.bf-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1.05rem 1.1rem 1.2rem;
+  border: 1px solid var(--bf-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  scroll-snap-align: start;
+  transition: opacity 0.2s ease;
+}
+
+.bf-day-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.45rem;
+  color: var(--bf-text-dim);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.bf-day-name > span {
+  flex-basis: 100%;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.bf-day-tag {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 212, 59, 0.14);
+  color: var(--bf-gold);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bf-day ul {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.85rem;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-day li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.38;
+}
+
+.bf-day li::before {
+  content: "50% off";
+  display: inline-block;
+  padding: 0.14rem 0.5rem;
+  border-radius: 4px;
+  background: var(--c-brand);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: skewX(-8deg);
+}
+
+.bf-day small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.bf-day.is-today {
+  border-color: var(--c-brand);
+  background: linear-gradient(165deg, rgba(235, 27, 33, 0.38), rgba(235, 27, 33, 0.1) 70%);
+  box-shadow: 0 0 0 1px var(--c-brand), 0 18px 40px rgba(235, 27, 33, 0.28);
+}
+
+.bf-day.is-today::after {
+  content: "Today";
+  position: absolute;
+  top: -0.7rem;
+  left: 1rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--bf-gold);
+  color: var(--bf-bg);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bf-day.is-today li::before {
+  background: var(--bf-gold);
+  color: var(--bf-bg);
+}
+
+.bf-day.is-past {
+  opacity: 0.42;
+}
+
+.bf-towns {
+  margin-top: 1.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--bf-line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.bf-towns h3 {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.bf-towns p {
+  margin-top: 0.3rem;
+  color: var(--bf-text-dim);
+  font-size: 0.88rem;
+}
+
+.bf-towns ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-towns a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.bf-towns a:hover {
+  border-color: var(--bf-gold);
+  background: var(--bf-gold);
+  color: var(--bf-bg);
+}
+
+@media (min-width: 1024px) {
+  .bf-towns {
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.32fr) 1fr;
+    gap: 0 2rem;
+    align-items: center;
+    padding: 1.5rem 1.75rem;
+    text-align: left;
+  }
+
+  .bf-towns ul {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    justify-content: flex-start;
+    margin-top: 0;
+  }
+}
+
+.bf-fineprint {
+  margin-top: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* Breakpoints ------------------------------------------------------------- */
+@media (min-width: 640px) {
+  .bf-actions {
+    display: flex;
+    justify-content: center;
+    max-width: none;
+  }
+
+  .bf-flyer {
+    width: min(100%, 24rem);
+  }
+
+  .bf-days {
+    grid-auto-columns: 16.5rem;
+    margin: 0 -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    scroll-padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bf-hero-inner {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-areas:
+      "copy flyer"
+      "schedule schedule";
+    gap: 3.25rem 4rem;
+    align-items: center;
+    padding-top: 4.5rem;
+    padding-bottom: 4rem;
+  }
+
+  .bf-hero-copy {
+    text-align: left;
+  }
+
+  .bf-title {
+    font-size: clamp(5rem, 7.4vw, 7rem);
+  }
+
+  .bf-lead,
+  .bf-perks,
+  .bf-actions {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .bf-actions {
+    justify-content: flex-start;
+  }
+
+  .bf-hours,
+  .bf-countdown-units {
+    justify-content: flex-start;
+  }
+
+  .bf-flyer {
+    justify-self: end;
+    width: min(100%, 27rem);
+  }
+
+  .bf-flyer-frame {
+    transform: rotate(1.75deg);
+  }
+
+  .bf-flyer-frame:hover,
+  .bf-flyer-frame:focus-visible {
+    transform: rotate(0deg) translateY(-4px) scale(1.01);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 40px 90px rgba(0, 0, 0, 0.6);
+  }
+
+  .bf-schedule-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    text-align: left;
+  }
+
+  .bf-days {
+    margin: 0 -2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    scroll-padding-inline: 2rem;
+  }
+
+  .bf-fineprint {
+    text-align: left;
+  }
+}
+
+@media (min-width: 1280px) {
+  .bf-days {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin: 0;
+    padding: 0.85rem 0 0;
+    overflow: visible;
+  }
+
+  .bf-day {
+    padding: 1rem 0.9rem 1.1rem;
+  }
+
+  .bf-day-name > span {
+    font-size: 0.98rem;
+  }
+
+  .bf-day li {
+    font-size: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-flyer-frame,
+  .bf-btn {
+    transition: none;
+  }
+
+  .bf-flyer-frame,
+  .bf-flyer-frame:hover,
+  .bf-flyer-frame:focus-visible,
+  .bf-btn:hover {
+    transform: none;
+  }
+}
+
+/* Full-flyer viewer dialog */
+#bf-flyer-dialog .site-dialog-panel {
+  width: min(100%, 46rem);
+  text-align: center;
+}
+
+#bf-flyer-dialog .site-dialog-kicker,
+#bf-flyer-dialog h2 {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.bf-flyer-dialog-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
+  background: #f3f4f6;
+}
+
 /* Preserve editorial image proportions at every breakpoint. */
 .challenge-image {
   display: block;

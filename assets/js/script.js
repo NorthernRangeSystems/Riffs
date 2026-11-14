@@ -513,12 +513,239 @@ document.addEventListener("DOMContentLoaded", () => {
     })(0);
   }
 
+  /* ==================================================================
+     10b. BLACK FRIDAY HERO
+     Visibility is decided before paint by the inline script in index.html
+     (it adds .bf-live to <html>). This highlights today's deal, writes the
+     status line, and runs the full-flyer viewer.
+  ================================================================== */
+  const bfHero = document.getElementById("black-friday");
+  const bfDialog = document.getElementById("bf-flyer-dialog");
+  const bfDialogPanel = bfDialog?.querySelector(".site-dialog-panel");
+  const bfDialogImg = bfDialog?.querySelector("img[data-src]");
+  let bfReturnFocus = null;
+
+  function trackBlackFriday(eventName, slot) {
+    if (typeof window.gtag !== "function") return;
+    window.gtag("event", eventName, {
+      event_category: "sale_promotion",
+      promotion_name: "black_friday_2026",
+      promotion_creative: "black-friday",
+      creative_slot: slot
+    });
+  }
+
+  function openBfFlyer(trigger) {
+    if (!bfDialog || !bfDialog.hidden) return;
+    if (saleAutoOpenTimer !== null) {
+      window.clearTimeout(saleAutoOpenTimer);
+      saleAutoOpenTimer = null;
+    }
+    if (bfDialogImg && !bfDialogImg.getAttribute("src")) {
+      bfDialogImg.src = bfDialogImg.dataset.src;
+    }
+    bfReturnFocus = trigger || null;
+    bfDialog.hidden = false;
+    document.body.classList.add("dialog-open");
+    trackBlackFriday("select_promotion", "hero_view_flyer");
+    requestAnimationFrame(() => bfDialogPanel?.focus());
+  }
+
+  function closeBfFlyer(restoreFocus = true) {
+    if (!bfDialog || bfDialog.hidden) return;
+    bfDialog.hidden = true;
+    document.body.classList.remove("dialog-open");
+    if (restoreFocus) bfReturnFocus?.focus();
+  }
+
+  if (bfHero && document.documentElement.classList.contains("bf-live")) {
+    const pad = n => String(n).padStart(2, "0");
+    const isoDay = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    const toLocalDate = iso => {
+      const [y, m, d] = iso.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    };
+    const longDate = iso => toLocalDate(iso).toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" });
+
+    // QA hook: ?bf-now=2026-11-18T14:30 simulates a time (with ?bf=preview).
+    const simulated = new URLSearchParams(window.location.search).get("bf-now");
+    const simulatedMs = simulated ? Date.parse(simulated) : NaN;
+    const clockOffset = Number.isNaN(simulatedMs) ? 0 : simulatedMs - Date.now();
+    const getNow = () => new Date(Date.now() + clockOffset);
+
+    const start = bfHero.dataset.bfStart || "";
+    const end = bfHero.dataset.bfEnd || "";
+    const dayCards = Array.from(bfHero.querySelectorAll(".bf-day[data-date]"));
+    const statusEl = bfHero.querySelector("[data-bf-status]");
+    const daysList = bfHero.querySelector("[data-bf-days]");
+    const countdown = bfHero.querySelector("[data-bf-countdown]");
+    const countdownLabel = bfHero.querySelector("[data-bf-countdown-label]");
+    const unitEls = {};
+    bfHero.querySelectorAll("[data-unit]").forEach(el => { unitEls[el.dataset.unit] = el; });
+    const daysUnit = bfHero.querySelector("[data-unit-wrap='d']");
+
+    let renderedDay = "";
+    let countdownTarget = null;
+    let countdownTimer = null;
+
+    const setStatus = (lead, rest) => {
+      if (!statusEl) return;
+      statusEl.textContent = "";
+      const strong = document.createElement("strong");
+      strong.textContent = lead;
+      statusEl.append(strong, " " + rest);
+    };
+
+    const dealsFor = card => Array.from(card.querySelectorAll("li")).map(item => {
+      const clone = item.cloneNode(true);
+      clone.querySelectorAll("small, .sr-only").forEach(el => el.remove());
+      return clone.textContent.replace(/\s+/g, " ").trim();
+    });
+
+    function updateCountdown() {
+      if (!countdown || !countdownTarget) return;
+      const remaining = Math.max(0, countdownTarget - getNow());
+      const totalSeconds = Math.floor(remaining / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+      const showDays = days > 0;
+
+      if (daysUnit) daysUnit.hidden = !showDays;
+      if (unitEls.d) unitEls.d.textContent = pad(days);
+      if (unitEls.h) unitEls.h.textContent = pad(hours);
+      if (unitEls.m) unitEls.m.textContent = pad(mins);
+      if (unitEls.s) unitEls.s.textContent = pad(secs);
+    }
+
+    // Rebuilds the day-dependent state. Runs on load and again whenever the
+    // local date rolls over, so a page left open at midnight stays correct.
+    function renderDay(today) {
+      renderedDay = today;
+      let todayCard = null;
+
+      dayCards.forEach(card => {
+        const date = card.dataset.date;
+        const name = card.querySelector(".bf-day-name");
+        card.classList.remove("is-today", "is-past");
+        card.removeAttribute("aria-current");
+        name?.querySelector(".bf-day-note")?.remove();
+
+        let noteText = "";
+        if (date === today) {
+          todayCard = card;
+          card.classList.add("is-today");
+          card.setAttribute("aria-current", "date");
+          noteText = " (today)";
+        } else if (date < today) {
+          card.classList.add("is-past");
+          noteText = " (ended)";
+        }
+        if (noteText && name) {
+          const note = document.createElement("span");
+          note.className = "sr-only bf-day-note";
+          note.textContent = noteText;
+          name.appendChild(note);
+        }
+      });
+
+      if (!start || !end) return;
+
+      if (today < start) {
+        countdownTarget = toLocalDate(start);
+        if (countdownLabel) countdownLabel.textContent = "Sale starts in";
+        const daysAway = Math.round((toLocalDate(start) - toLocalDate(today)) / 86400000);
+        setStatus(daysAway === 1 ? "Starts tomorrow:" : "Starts", `${longDate(start)}. A new 50% off deal every day through ${longDate(end)}.`);
+      } else if (today > end) {
+        countdownTarget = null;
+        setStatus("Sale ended.", "Thanks for shopping Black Friday at Riff's.");
+      } else {
+        const tomorrow = toLocalDate(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        countdownTarget = tomorrow;
+        const lastDay = today === end;
+        if (countdownLabel) countdownLabel.textContent = lastDay ? "Last day! Sale ends in" : "Today's deals end in";
+        if (todayCard) {
+          const dayNumber = dayCards.indexOf(todayCard) + 1;
+          const lead = lastDay ? "Final day, today only:" : `Day ${dayNumber} of ${dayCards.length}, today only:`;
+          setStatus(lead, `50% off ${dealsFor(todayCard).join(" and ")}.`);
+        }
+      }
+
+      if (countdown) countdown.hidden = !countdownTarget;
+      updateCountdown();
+
+      // Bring today's card into view inside the swipeable row (no page scroll).
+      if (todayCard && daysList && daysList.scrollWidth > daysList.clientWidth) {
+        const listRect = daysList.getBoundingClientRect();
+        const cardRect = todayCard.getBoundingClientRect();
+        const inset = parseFloat(window.getComputedStyle(daysList).paddingLeft) || 0;
+        daysList.scrollLeft += cardRect.left - listRect.left - inset;
+      }
+    }
+
+    function tick() {
+      const today = isoDay(getNow());
+      if (today !== renderedDay) {
+        renderDay(today);
+      } else {
+        updateCountdown();
+      }
+      if (!countdownTarget && countdownTimer !== null) {
+        window.clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+    }
+
+    renderDay(isoDay(getNow()));
+    if (countdownTarget) countdownTimer = window.setInterval(tick, 1000);
+
+    // Timers are throttled in background tabs; resync as soon as it is visible.
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) tick();
+    });
+
+    trackBlackFriday("view_promotion", "homepage_hero");
+
+    bfHero.querySelectorAll("[data-bf-flyer-open]").forEach(trigger => {
+      trigger.addEventListener("click", () => openBfFlyer(trigger));
+    });
+    bfHero.querySelector("[data-bf-store-link]")?.addEventListener("click", () => {
+      trackBlackFriday("select_promotion", "hero_find_store");
+    });
+
+    // Community chips: scroll to the locator (handled by smooth scrolling)
+    // and pick that store in the dropdown so its details and map pin show.
+    bfHero.querySelectorAll("[data-bf-store]").forEach(link => {
+      link.addEventListener("click", () => {
+        const storeSelect = document.getElementById("store-select");
+        const option = storeSelect && Array.from(storeSelect.options).find(opt => opt.textContent === link.dataset.bfStore);
+        if (option) {
+          storeSelect.value = option.value;
+          storeSelect.dispatchEvent(new Event("change"));
+        }
+        trackBlackFriday("select_promotion", "hero_town_" + link.dataset.bfStore.replace(/^Riff's /, "").toLowerCase().replace(/[^a-z]+/g, "_"));
+      });
+    });
+  }
+
+  bfDialog?.querySelectorAll("[data-bf-flyer-close]").forEach(trigger => {
+    trigger.addEventListener("click", () => closeBfFlyer());
+  });
+  bfDialog?.querySelector("[data-bf-flyer-store]")?.addEventListener("click", () => {
+    trackBlackFriday("select_promotion", "flyer_find_store");
+    closeBfFlyer(false);
+  });
+
   document.addEventListener("keydown", event => {
     const activeDialog = newsletterDialog && !newsletterDialog.hidden
       ? newsletterDialog
-      : (salePopup && !salePopup.hidden
-        ? salePopup
-        : (contactDialog && !contactDialog.hidden ? contactDialog : null));
+      : (bfDialog && !bfDialog.hidden
+        ? bfDialog
+        : (salePopup && !salePopup.hidden
+          ? salePopup
+          : (contactDialog && !contactDialog.hidden ? contactDialog : null)));
 
     if (event.key === "Tab" && activeDialog) {
       const focusable = Array.from(activeDialog.querySelectorAll(
@@ -546,6 +773,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (newsletterDialog && !newsletterDialog.hidden) {
       setNewsletterDialog(false);
       newsletterBtn?.focus();
+      return;
+    }
+    if (bfDialog && !bfDialog.hidden) {
+      closeBfFlyer();
       return;
     }
     if (salePopup && !salePopup.hidden) {

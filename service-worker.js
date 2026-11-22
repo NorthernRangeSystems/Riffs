@@ -1,4 +1,4 @@
-const CACHE_NAME = "riffs-store-v46";
+const CACHE_NAME = "riffs-store-v47";
 const CORE_ASSETS = [
   "/",
   "/index.html",
